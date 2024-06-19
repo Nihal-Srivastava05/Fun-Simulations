@@ -23,11 +23,8 @@ class Body:
 		self.vel = pygame.math.Vector2(initial_vel[0], initial_vel[1])
 		self.acc = pygame.math.Vector2(0, 0)
 
-		self.maxSpeed = 1
-
 	def update(self):
 		self.vel += self.acc
-		# self.vel.scale_to_length(self.maxSpeed)
 		self.pos += self.vel
 		self.acc *= 0
 
@@ -42,9 +39,6 @@ class Body:
 		self.acc += (force / self.mass)
 
 	def show(self, screen):
-		# screen.set_at((int(self.pos.x), int(self.pos.y)), (255, 0, 0))
-		# pygame.draw.circle(screen, (0, 0, 0), (int(self.pos.x), int(self.pos.y)), 1)
-		
 		draw_circle_alpha(screen, (0, 0, 0, self.mass*255/1000), (int(self.pos.x), int(self.pos.y)), 10)
 
 	def edges(self):
@@ -52,16 +46,6 @@ class Body:
 			self.vel.x *= -1
 		if(self.pos.y > self.height or self.pos.y < 0):
 			self.vel.y *= -1
-
-		# if(self.pos.x > self.width):
-		# 	self.pos.x = 0
-		# elif(self.pos.x < 0):
-		# 	self.pos.x = self.width - 1
-		
-		# if(self.pos.y > self.height):
-		# 	self.pos.y = 0
-		# elif(self.pos.y < 0):
-		# 	self.pos.y = self.height - 1
 
 def calculateNetForce(a, b):
 	# fx = rGmM/r^3, r = (x^2 + y^2)^0.5, r = ax - bx (force on a by b)
@@ -80,18 +64,18 @@ class Container:
 		self.inc = increment
 		self.rows = int(math.floor(self.windowWidth / self.scale))
 		self.cols = int(math.floor(self.windowHeight / self.scale))
-		self.zoff = 0
 		self.bodies = []
 
 	def setup(self, screen):
 		for i in range(1, 6):
 			self.bodies.append(Body(width=self.windowWidth, height=self.windowHeight, mass=50 * i, scale=self.scale, initial_pos=(random.random()*self.windowWidth,random.random()*self.windowHeight)))
 
-		self.bodies.append(Body(width=self.windowWidth, height=self.windowHeight, mass=1000, scale=self.scale, initial_pos=(random.random()*self.windowWidth,random.random()*self.windowHeight)))
+		# self.bodies.append(Body(width=self.windowWidth, height=self.windowHeight, mass=5000, scale=self.scale, initial_pos=(random.random()*self.windowWidth,random.random()*self.windowHeight)))
+		self.bodies.append(Body(width=self.windowWidth, height=self.windowHeight, mass=1000, scale=self.scale, initial_pos=(self.windowWidth // 2, self.windowHeight // 2)))
 
 		screen.fill((255, 255, 255))
 
-	def show(self, screen, show_direction=False, random_start=0):
+	def show(self, screen):
 		screen.fill((255, 255, 255))
 		for i in range(len(self.bodies)):
 			totalForce = pygame.math.Vector2(0, 0)
@@ -100,35 +84,11 @@ class Container:
 					force = calculateNetForce(self.bodies[i], self.bodies[j])
 					totalForce += force
 			self.bodies[i].applyForce(totalForce)
-					
-					
-		# for y in range(self.rows):
-		# 	xoff = 0
-		# 	for x in range(self.cols):
-		# 		index = x + y * self.cols
-		# 		angle = convert_range(noise.pnoise3(xoff+random_start, yoff+random_start, self.zoff+random_start)) * 360
-		# 		v_start = pygame.math.Vector2(x*self.scale, y*self.scale)
-		# 		v_curr = pygame.math.Vector2(self.scale, 0).rotate(angle)
-		# 		v_end = v_start + v_curr
-
-		# 		xoff += self.inc
-
-		# 		v_curr.scale_to_length(1)
-		# 		self.flowfield[index] = v_curr
-
-		# 		if(show_direction):
-		# 			pygame.draw.line(screen, (0, 0, 0), v_start, v_end, 1)
-			
-		# 	yoff += self.inc
-		
 
 		for i in range(len(self.bodies)):
-			# self.particles[i].follow(self.flowfield)
 			self.bodies[i].update()
 			self.bodies[i].show(screen)
 			self.bodies[i].edges()
-
-		self.zoff += 0.001
 
 class Simulation:
 	def __init__(self, height=200, width=200):
@@ -138,7 +98,7 @@ class Simulation:
 	def on_execute(self):
 		pygame.init()
 		screen = pygame.display.set_mode((self.windowWidth, self.windowHeight))
-		pygame.display.set_caption("Perlin Noise - Flow Field ")
+		pygame.display.set_caption("Gravitational bodies")
 
 		container = Container(width=self.windowWidth, height=self.windowHeight)
 		container.setup(screen)
@@ -149,7 +109,7 @@ class Simulation:
 				if event.type == pygame.QUIT:
 					running = False
 
-			container.show(screen, random_start=101)
+			container.show(screen)
 			pygame.display.update()
 
 if __name__ == '__main__':
